@@ -56,7 +56,7 @@ def main():
         elif choice == "4":
             delete(students)
         elif choice == "5":
-            print("Exiting the program. Goodbye!")
+            print("Exiting the program.")
             break
         else:
             print("Invalid choice. Please try again.")
