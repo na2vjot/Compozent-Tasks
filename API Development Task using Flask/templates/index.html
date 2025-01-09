@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>To-do List</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; 
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 250px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .add-button {
+            background-color: #4CAF50; /*Green*/
+            color: white;
+        }
+
+        .edit-button {
+            background-color: #2196F3; /* Blue */
+            color: white;
+        }
+
+        .delete-button {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .completed {
+            text-decoration: line-through;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-do List</h1>
+
+        <div class="input-group">
+            <input type="text" id="newTask" placeholder="New Task">
+            <button onclick="addTask()" class="add-button">Add</button>
+        </div>
+
+        <ul id="todoList">
+        </ul>
+    </div>
+
+    <script>
+        function fetchTodos() {
+            fetch('/todos')
+                .then(response => response.json())
+                .then(data => {
+                    const todoList = document.getElementById('todoList');
+                    todoList.innerHTML = '';
+                    data.forEach(todo => {
+                        const listItem = document.createElement('li');
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.checked = todo.completed;
+                        checkbox.addEventListener('change', () => toggleComplete(todo.id));
+
+                        const taskText = document.createTextNode(todo.task);
+
+                        const editButton = document.createElement('button');
+                        editButton.textContent = 'Edit';
+                        editButton.classList.add('edit-button');
+                        editButton.onclick = () => editTodo(todo.id);
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.classList.add('delete-button');
+                        deleteButton.onclick = () => deleteTodo(todo.id);
+
+                        listItem.appendChild(checkbox);
+                        listItem.appendChild(taskText);
+                        listItem.appendChild(editButton);
+                        listItem.appendChild(deleteButton);
+
+                        if (todo.completed) {
+                            listItem.classList.add('completed');
+                        }
+
+                        todoList.appendChild(listItem);
+                    });
+                });
+        }
+
+        function addTask() {
+            const newTask = document.getElementById('newTask').value;
+            fetch('/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ task: newTask })
+            })
+            .then(response => response.json())
+            .then(data => {
+                fetchTodos();
+                document.getElementById('newTask').value = '';
+            });
+        }
+
+        function editTodo(todoId) {
+            const updatedTask = prompt('Enter updated task:', '');
+            if (updatedTask) {
+                fetch(`/todos/${todoId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task: updatedTask }) 
+                })
+                .then(response => response.json())
+                .then(data => {
+                    fetchTodos();
+                });
+            }
+        }
+
+        function deleteTodo(todoId) {
+            fetch(`/todos/${todoId}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                fetchTodos();
+            });
+        }
+
+        function toggleComplete(todoId) {
+            fetch(`/todos/${todoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ completed: !todo.completed }) 
+            })
+            .then(response => response.json())
+            .then(data => {
+                fetchTodos();
+            });
+        }
+
+        fetchTodos(); // Load initial todos
+    </script>
+</body>
+</html>
